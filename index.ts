@@ -9,9 +9,27 @@ export class SeleniumCmd {
                   .forBrowser('chrome')
                   .build();
   constructor (
-    public site:string = 'https://google.com'
+    public site:string = 'https://facebook.com/login.php'
   ) {
-    this.driver.then(() => this.takeScreen());
+    this.driver.then(() => this.driver.get(this.site))
+      .then(() => this.authInit())
+      .catch((e) => this.errorHandler(e));
+  }
+
+  public authInit() {
+    console.info(`Authenticating at ${this.site} with ${process.env['FB_USER']}`);
+    this.driver.then(() => this.until.titleIs('Log in to Facebook | Facebook'))
+      .then(() => this.authenticate())
+      .catch((e) => this.errorHandler(e));
+  }
+
+  public authenticate() {
+    this.driver.findElement(this.By.name('email')).sendKeys(process.env['FB_USER']);
+    this.driver.findElement(this.By.name('pass')).sendKeys(process.env['FB_PASS']);
+    this.driver.findElement(this.By.id('loginbutton')).click();
+    this.driver.wait(this.until.titleIs('Facebook'), 1000)
+      .then(() => this.takeScreen())
+      .catch((e) => this.errorHandler(e));
   }
 
   public takeScreen() {
@@ -23,19 +41,15 @@ export class SeleniumCmd {
   }
 
   public writeScreenShot(screenShot) {
-    fs.writeFile('screenShot.png', screenShot, 'base64', (e) => {
+    fs.writeFile('shot.png', screenShot, 'base64', (e) => {
       if (e) this.errorHandler(e);
-      this.quit();
+      this.driver.quit();
     });
   }
 
   public errorHandler(e) {
     console.log(e);
     console.trace();
-    this.driver.quit();
-  }
-
-  public quit() {
     this.driver.quit();
   }
 }
@@ -45,5 +59,5 @@ export class SeleniumCmd {
  * @constructor
  * @param {string} url - Url of the site.
  */
-const options = process.argv[2];
+const options = process.env['URL'] || process.argv[2];
 const scmd = new SeleniumCmd(options);
