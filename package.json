@@ -1,0 +1,24 @@
+{
+  "name": "selenium-bam",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "engines": {
+    "node": "v6.11.1",
+    "npm": "5.3.0"
+  },
+  "scripts": {
+    "start": "node index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@types/selenium-webdriver": "^3.0.4",
+    "bluebird": "^3.5.0",
+    "selenium-webdriver": "^3.4.0"
+  },
+  "devDependencies": {
+    "@types/bluebird": "^3.5.8",
+    "@types/node": "^8.0.14"
+  }
+}
