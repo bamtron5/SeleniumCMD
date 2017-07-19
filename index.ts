@@ -5,21 +5,34 @@ import * as fs from 'fs';
 export class SeleniumCmd {
   public By = webdriver.By;
   public until = webdriver.until;
-  public driver = new webdriver.Builder()
+  public driver:webdriver.ThenableWebDriver = new webdriver.Builder()
                   .forBrowser('chrome')
                   .build();
-  public site:string = 'https://google.com';
-  constructor () {
+  constructor (
+    public site:string = 'https://google.com'
+  ) {
+    this.driver.then(() => this.takeScreen());
   }
 
   public takeScreen() {
-    return new Promise((resolve, reject) => {
-      this.driver.get(this.site)
-        .catch((e) => reject(e))
-        .then(() => this.driver.takeScreenshot())
-        .catch((e) => reject(e))
-        .then((screenShot) => fs.writeFile('screenShot.png', screenShot, 'base64', (err) => err ? reject(err) : resolve()));
+    this.driver.get(this.site)
+      .catch((e) => this.errorHandler(e))
+      .then(() => this.driver.takeScreenshot())
+      .catch((e) => this.errorHandler(e))
+      .then((screenShot) => this.writeScreenShot(screenShot));
+  }
+
+  public writeScreenShot(screenShot) {
+    fs.writeFile('screenShot.png', screenShot, 'base64', (e) => {
+      if (e) this.errorHandler(e);
+      this.quit();
     });
+  }
+
+  public errorHandler(e) {
+    console.log(e);
+    console.trace();
+    this.driver.quit();
   }
 
   public quit() {
@@ -27,27 +40,10 @@ export class SeleniumCmd {
   }
 }
 
-const scmd = new SeleniumCmd();
-scmd.takeScreen()
-  .then(() => {
-    scmd.quit();
-  })
-  .catch((e) => {
-    console.log(e);
-    scmd.quit();
-  });
-
-
-// var webdriver = require('selenium-webdriver'),
-//     By = webdriver.By,
-//     until = webdriver.until;
-//
-// var driver = new webdriver.Builder()
-//     .forBrowser('chrome')
-//     .build();
-//
-// driver.get('http://www.google.com/ncr');
-// driver.findElement(By.name('q')).sendKeys('webdriver');
-// driver.findElement(By.name('btnG')).click();
-// driver.wait(until.titleIs('webdriver - Google Search'), 1000);
-// driver.quit();
+/**
+ * Call a website.
+ * @constructor
+ * @param {string} url - Url of the site.
+ */
+const options = process.argv[2];
+const scmd = new SeleniumCmd(options);
